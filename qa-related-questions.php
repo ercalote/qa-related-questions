@@ -1,31 +1,43 @@
 <?php
 
-/*
-	Question2Answer 1.4.1 (c) 2011, Gideon Greenspan
-
-	http://www.question2answer.org/
-
-
-	File: qa-plugin/tag-cloud-widget/qa-tag-cloud.php
-	Version: 1.4.1
-	Date: 2011-07-10 06:58:57 GMT
-	Description: Widget module class for tag cloud plugin
-
-
-	This program is free software; you can redistribute it and/or
-	modify it under the terms of the GNU General Public License
-	as published by the Free Software Foundation; either version 2
-	of the License, or (at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	More about this license: http://www.question2answer.org/license.php
-*/
-
 	class qa_related_questions {
+
+		function option_default($option)
+		{
+			if ($option=='related_qs_num')
+				return 10;
+		}
+
+
+		function admin_form()
+		{
+			$saved=false;
+
+			if (qa_clicked('related_qs_save_button')) {
+				qa_opt('related_qs_num', (int)qa_post_text('related_qs_num_field'));
+				$saved=true;
+			}
+
+			return array(
+				'ok' => $saved ? 'Related questions settings saved' : null,
+
+				'fields' => array(
+					array(
+						'label' => 'Number of questions to show (max):',
+						'type' => 'number',
+						'value' => (int)qa_opt('related_qs_num'),
+						'tags' => 'NAME="related_qs_num_field"',
+					),
+				),
+
+				'buttons' => array(
+					array(
+						'label' => 'Save Changes',
+						'tags' => 'NAME="related_qs_save_button"',
+					),
+				),
+			);
+		}
 
 		function allow_template($template)
 		{
@@ -69,8 +81,12 @@
 				else
 					$themeobject->output('<h2>'.qa_lang('main/no_related_qs_title').'</h2>');
 
-				foreach ($relatedquestions as $related)
+				$upper = (qa_opt('related_qs_num') < count($relatedquestions)) ? qa_opt('related_qs_num') : count($relatedquestions);
+				foreach($relatedquestions as $related)
+				{					if($upper<=0) break;
 					$themeobject->output('<p style="margin:0 0 10px 0; font-weight:bold;"><a href="'.qa_path_html(qa_q_request($related['postid'], $related['title'])).'">'.$related['title'].'</a></p>');
+					$upper--;
+				}
 			}
 		}
 
